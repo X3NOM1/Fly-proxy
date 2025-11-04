@@ -1,24 +1,17 @@
-# Use Python base image
+# Use lightweight Python base image
 FROM python:3.11-slim
+
+# Install dependencies
+RUN pip install flask requests gunicorn
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first
-COPY requirements.txt ./
-
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy all files
+# Copy all project files
 COPY . .
 
-# Expose port for Flask app
+# Expose Fly.io port
 EXPOSE 8080
 
-# Set environment variable
-ENV PORT=8080
-ENV PYTHONUNBUFFERED=1
-
-# Run the Flask app
-CMD ["python", "app.py"]
+# Run Flask app with gunicorn
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
