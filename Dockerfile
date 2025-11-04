@@ -1,31 +1,22 @@
-# ─────────────────────────────
-# 🧱 Base image
-# ─────────────────────────────
+# ========== 1️⃣ Base Image ==========
+# Use lightweight Python base image for small deploy size
 FROM python:3.10-slim
 
-# ─────────────────────────────
-# 🏠 Working directory
-# ─────────────────────────────
-WORKDIR /app
+# ========== 2️⃣ Working Directory ==========
+WORKDIR /usr/src/app
 
-# ─────────────────────────────
-# 📦 Copy and install dependencies
-# ─────────────────────────────
-# requirements.txt ထဲက library တွေ install လုပ်မယ်
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# ─────────────────────────────
-# 📁 Copy all source files
-# ─────────────────────────────
+# ========== 3️⃣ Copy Files ==========
+# Copy everything from your project folder into container
 COPY . .
 
-# ─────────────────────────────
-# 🌐 Expose port (Fly.io expects 8080)
-# ─────────────────────────────
+# ========== 4️⃣ Install Dependencies ==========
+# Install Flask, Requests, and Gunicorn for production server
+RUN pip install --no-cache-dir flask requests gunicorn
+
+# ========== 5️⃣ Expose Port ==========
+# Fly.io uses port 8080 by default
 EXPOSE 8080
 
-# ─────────────────────────────
-# 🚀 Command to run app
-# ─────────────────────────────
-CMD ["python3", "app.py"]
+# ========== 6️⃣ Run App in Production ==========
+# Run with Gunicorn (faster, multi-worker Flask server)
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
