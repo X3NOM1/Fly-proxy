@@ -1,27 +1,23 @@
 # Simple Fly.io Proxy Server
 FROM alpine:latest
 
-# Install Python and required tools
+# Install dependencies
 RUN apk add --no-cache python3 py3-pip
 
-# Create working directory
+# Fix PEP 668 restriction and install Flask + Requests
+RUN pip install --break-system-packages flask requests
+
+# Set working directory
 WORKDIR /app
 
-# Copy all files
+# Copy all project files
 COPY . .
 
-# Create a virtual environment for Python
-RUN python3 -m venv /app/venv
-ENV PATH="/app/venv/bin:$PATH"
+# Create a basic Flask proxy app
+RUN echo 'from flask import Flask, request, Response\nimport requests\n\napp = Flask(__name__)\n\n@app.route("/", defaults={"path": ""})\n@app.route("/<path:path>")\ndef proxy(path):\n    url = request.args.get("url")\n    if not url:\n        return "Usage: /?url=https://example.com", 400\n    try:\n        resp = requests.get(url, headers={key: value for (key, value) in request.headers if key != "Host"})\n        return Response(resp.content, resp.status_code, resp.headers.items())\n    except Exception as e:\n        return f"Error: {str(e)}", 500\n\nif __name__ == "__main__":\n    app.run(host="0.0.0.0", port=8080)' > app.py
 
-# Install required Python packages inside the venv
-RUN pip install --no-cache-dir flask requests
-
-# Create proxy app
-RUN echo 'from flask import Flask, request, Response\nimport requests\napp = Flask(__name__)\n@app.route("/", defaults={"path": ""})\n@app.route("/<path:path>")\ndef proxy(path):\n    url = request.args.get("url")\n    if not url: return "Please provide ?url=", 400\n    resp = requests.get(url)\n    return Response(resp.content, resp.status_code, resp.headers.items())\n\nif __name__ == "__main__":\n    app.run(host="0.0.0.0", port=8080)' > app.py
-
-# Expose port for Fly.io
+# Expose the port for Fly.io
 EXPOSE 8080
 
-# Run the Flask app
+# Start the proxy server
 CMD ["python3", "app.py"]
