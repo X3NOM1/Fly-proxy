@@ -1,24 +1,24 @@
-# ✅ Use Python base image instead of Node
+# ✅ Use a Python image (NOT Node)
 FROM python:3.11-slim
 
-# Set working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy requirements file if exists
+# Copy requirements first (for caching)
 COPY requirements.txt ./
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt || true
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the app
+# Copy all project files
 COPY . .
 
-# Expose the app port
+# Expose port for the app
 EXPOSE 8080
 
 # Environment variables
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 
-# Start the Flask app
+# Start the app
 CMD ["python", "app.py"]
