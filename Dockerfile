@@ -1,26 +1,31 @@
-# --- Base image ---
-FROM python:3.11-slim
+# ─────────────────────────────
+# 🧱 Base image
+# ─────────────────────────────
+FROM python:3.10-slim
 
-# --- Set working directory ---
+# ─────────────────────────────
+# 🏠 Working directory
+# ─────────────────────────────
 WORKDIR /app
 
-# --- Prevent Python from writing .pyc files & buffering output ---
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# ─────────────────────────────
+# 📦 Copy and install dependencies
+# ─────────────────────────────
+# requirements.txt ထဲက library တွေ install လုပ်မယ်
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# --- Install system dependencies (optional but helpful) ---
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# ─────────────────────────────
+# 📁 Copy all source files
+# ─────────────────────────────
+COPY . .
 
-# --- Install Python dependencies ---
-RUN pip install --no-cache-dir flask requests gunicorn
-
-# --- Copy app code into container ---
-COPY app.py .
-
-# --- Expose port 8080 (for Fly.io) ---
+# ─────────────────────────────
+# 🌐 Expose port (Fly.io expects 8080)
+# ─────────────────────────────
 EXPOSE 8080
 
-# --- Run the Flask app via Gunicorn (production server) ---
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
+# ─────────────────────────────
+# 🚀 Command to run app
+# ─────────────────────────────
+CMD ["python3", "app.py"]
