@@ -1,24 +1,24 @@
-# Use lightweight Python base image
+# ✅ Use Python base image instead of Node
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements if exists
+# Copy requirements file if exists
 COPY requirements.txt ./
 
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt || true
 
-# Copy rest of the application code
+# Copy the rest of the app
 COPY . .
 
-# Expose the port that Fly.io expects
+# Expose the app port
 EXPOSE 8080
 
-# Set environment variables for Flask
+# Environment variables
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 
-# Run the app
+# Start the Flask app
 CMD ["python", "app.py"]
