@@ -1,20 +1,26 @@
-# Lightweight Python base image (no Alpine pip issue)
+# --- Base image ---
 FROM python:3.11-slim
 
-# Set working directory
+# --- Set working directory ---
 WORKDIR /app
 
-# Copy project files
-COPY . .
+# --- Prevent Python from writing .pyc files & buffering output ---
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Install dependencies
+# --- Install system dependencies (optional but helpful) ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# --- Install Python dependencies ---
 RUN pip install --no-cache-dir flask requests gunicorn
 
-# Create simple proxy app
-RUN echo 'from flask import Flask, request, Response\nimport requests\napp = Flask(__name__)\n@app.route("/", defaults={"path": ""})\n@app.route("/<path:path>")\ndef proxy(path):\n    url = request.args.get("url")\n    if not url: return "Please provide ?url=", 400\n    resp = requests.get(url)\n    return Response(resp.content, resp.status_code, resp.headers.items())\n\nif __name__ == "__main__":\n    app.run(host="0.0.0.0", port=8080)' > app.py
+# --- Copy app code into container ---
+COPY app.py .
 
-# Expose port for Fly.io
+# --- Expose port 8080 (for Fly.io) ---
 EXPOSE 8080
 
-# Use gunicorn (production safe)
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# --- Run the Flask app via Gunicorn (production server) ---
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
